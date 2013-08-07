@@ -23,6 +23,8 @@ versions.each do |version|
       rdoc.title = "Documentation for #{version.capitalize.gsub('_',' ')}"
       rdoc.main = "#{version}/README"
       rdoc.rdoc_dir = version
+      rdoc.rdoc_files << "sources/#{version}"
+      rdoc.rdoc_files << "sources/#{version}/README"
       rdoc.options << "-U"
     end
   end
