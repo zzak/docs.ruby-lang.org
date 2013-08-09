@@ -16,13 +16,18 @@ versions.each do |version|
 
   namespace :rdoc do
     RDoc::Task.new version do |rdoc|
+      root = "sources/#{version}"
+
       rdoc.title = "Documentation for #{version.capitalize.gsub('_',' ')}"
-      rdoc.main = "#{version}/README"
+      rdoc.main = "README"
       rdoc.rdoc_dir = version
-      rdoc.rdoc_files << "sources/#{version}"
-      rdoc.rdoc_files << "sources/#{version}/README"
+      rdoc.rdoc_files << root
+      rdoc.rdoc_files << "#{root}/README"
       rdoc.options << "-U"
-      rdoc.options << "--root=sources/#{version}"
+      rdoc.options << "--all"
+      rdoc.options << "--root=#{root}"
+      rdoc.options << "--page-dir=#{root}/doc"
+      rdoc.options << "--encoding=UTF-8"
     end
   end
   task "rdoc:#{version}" => "update:#{version}"
