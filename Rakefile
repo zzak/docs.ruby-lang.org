@@ -2,20 +2,16 @@ require 'rdoc/task'
 
 versions = %w(trunk ruby_2_0_0 ruby_1_9_3 ruby_1_8_7)
 versions.each do |version|
-  namespace :source do
-    desc "Checks out the source for #{version}"
-    task version do
-      sh "git clone --branch=#{version} git://github.com/ruby/ruby.git sources/#{version}" do |ok, res|
-        next unless ok
-      end
+  desc "Checks out the source for #{version}"
+  task "source:#{version}" do
+    sh "git clone --depth=1 --branch=#{version} git://github.com/ruby/ruby.git sources/#{version}" do |ok, res|
+      next unless ok
     end
   end
 
-  namespace :update do
-    desc "Updates the source for #{version}"
-    task version do
-      sh "cd sources/#{version} && git fetch origin && git rebase remotes/origin/#{version}"
-    end
+  desc "Updates the source for #{version}"
+  task "update:#{version}" => "source:#{version}" do
+    sh "cd sources/#{version} && git pull origin #{version}"
   end
 
   namespace :rdoc do
@@ -26,21 +22,17 @@ versions.each do |version|
       rdoc.rdoc_files << "sources/#{version}"
       rdoc.rdoc_files << "sources/#{version}/README"
       rdoc.options << "-U"
+      rdoc.options << "--root=sources/#{version}"
     end
   end
+  task "rdoc:#{version}" => "update:#{version}"
 end
 
-namespace :source do
-  desc "Checks out all sources for the following versions: #{versions.join(', ')}"
-  task :all => versions.map { |v| v.to_sym }
-end
+desc "Checks out all sources for the following versions: #{versions.join(', ')}"
+task "source:all" => versions.map { |v| "source:#{v.to_sym}" }
 
-namespace :update do
-  desc "Updates the sources for the following versions: #{versions.join(', ')}"
-  task :all => versions.map { |v| v.to_sym }
-end
+desc "Updates the sources for the following versions: #{versions.join(', ')}"
+task "update:all" => %w[source:all] + versions.map { |v| "update:#{v.to_sym}" }
 
-namespace :rdoc do
-  desc "Build RDoc HTML files for the following versions: #{versions.join(', ')}"
-  task :all => versions.map { |v| v.to_sym }
-end
+desc "Build RDoc HTML files for the following versions: #{versions.join(', ')}"
+task "rdoc:all" => %w[update:all] + versions.map { |v| "rdoc:#{v.to_sym}" }
