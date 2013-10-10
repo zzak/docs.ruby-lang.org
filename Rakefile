@@ -1,11 +1,17 @@
 require 'rdoc/task'
 
-versions = %w(trunk ruby_2_0_0 ruby_1_9_3 ruby_1_8_7)
-versions.each do |version|
+versions = {
+  "trunk" => "trunk",
+  "2.0.0" => "ruby_2_0_0",
+  "1.9.3" => "ruby_1_9_3",
+  "1.8.7" => "ruby_1_8_7",
+}
+
+versions.each do |version, branch_name|
   source_dir = "sources/#{version}"
 
   directory source_dir do
-    sh "git clone --depth=1 --branch=#{version} git://github.com/ruby/ruby.git #{source_dir}"
+    sh "git clone --depth=1 --branch=#{branch_name} git://github.com/ruby/ruby.git #{source_dir}"
   end
 
   desc "Checks out source for #{version}"
@@ -14,13 +20,13 @@ versions.each do |version|
   desc "Updates source for #{version}"
   task "update:#{version}" => source_dir do
     Dir.chdir source_dir do
-      sh "git pull origin #{version}"
+      sh "git pull origin #{branch_name}"
     end
   end
 
   namespace :rdoc do
     RDoc::Task.new version do |rdoc|
-      rdoc.title = "Documentation for #{version.capitalize.gsub('_',' ')}"
+      rdoc.title = "Documentation for Ruby #{version}"
       rdoc.main = "README"
       rdoc.rdoc_dir = version
       rdoc.rdoc_files << source_dir
@@ -35,11 +41,11 @@ versions.each do |version|
 end
 
 desc "Checks out sources for all versions"
-task "source" => versions.map { |v| "source:#{v}" }
+task "source" => versions.keys.map { |version| "source:#{version}" }
 
 desc "Updates sources for all versions"
-task "update" => versions.map { |v| "update:#{v}" }
+task "update" => versions.keys.map { |version| "update:#{version}" }
 
 desc "Build RDoc HTML files for all versions"
-task "rdoc" => versions.map { |v| "rdoc:#{v}" }
+task "rdoc" => versions.keys.map { |version| "rdoc:#{version}" }
 
